@@ -1,0 +1,33 @@
+Capturing on device: eth0
+
+Packet captured:
+Source IP: 192.168.1.5
+Destination IP: 192.168.1.10
+Protocol: TCP
+Source Port: 52345
+Destination Port: 80
+Payload: 48 65 6c 6c 6f 20 57 6f 72 6c 64 
+
+Packet captured:
+Source IP: 192.168.1.10
+Destination IP: 192.168.1.5
+Protocol: TCP
+Source Port: 80
+Destination Port: 52345
+Payload: 48 69 20 74 68 65 72 65 
+
+Packet captured:
+Source IP: 192.168.1.5
+Destination IP: 192.168.1.255
+Protocol: UDP
+Source Port: 12345
+Destination Port: 53
+Payload: 00 01 00 00 00 01 00 00 00 00 
+
+Packet captured:
+Source IP: 192.168.1.10
+Destination IP: 192.168.1.5
+Protocol: UDP
+Source Port: 53
+Destination Port: 12345
+Payload: 00 00 00 00 00 00 00 00 
