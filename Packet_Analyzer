@@ -1,0 +1,103 @@
+#include <pcap.h>
+#include <stdio.h>
+#include <netinet/ip.h>
+#include <netinet/tcp.h>
+#include <netinet/udp.h>
+#include <arpa/inet.h>
+#include <string.h>
+
+void packet_handler(u_char *user_data, const struct pcap_pkthdr *pkthdr, const u_char *packet) 
+{
+    struct ip *iph = (struct ip *)(packet + 14);    
+    char src_ip[INET_ADDRSTRLEN], dst_ip[INET_ADDRSTRLEN];
+
+    // Convert IP addresses to human-readable format
+    inet_ntop(AF_INET, &(iph->ip_src), src_ip, INET_ADDRSTRLEN);
+    inet_ntop(AF_INET, &(iph->ip_dst), dst_ip, INET_ADDRSTRLEN);
+    
+    printf("\nPacket captured:\n");
+    printf("Source IP: %s\n", src_ip);
+    printf("Destination IP: %s\n", dst_ip);
+
+    // Check the protocol and print the respective header details
+    if (iph->ip_p == IPPROTO_TCP) 
+    {
+        printf("Protocol: TCP\n");
+        struct tcphdr *tcph = (struct tcphdr *)(packet + 14 + iph->ip_hl * 4);
+        printf("Source Port: %u\n", ntohs(tcph->source));
+        printf("Destination Port: %u\n", ntohs(tcph->dest));
+        
+        // Calculate and print the payload
+        const u_char *payload = packet + 14 + iph->ip_hl * 4 + sizeof(struct tcphdr);
+        int payload_size = ntohs(iph->ip_len) - (iph->ip_hl * 4 + sizeof(struct tcphdr));
+        
+        printf("Payload: ");
+        if (payload_size > 0) 
+        {
+            for (int i = 0; i < payload_size; i++) 
+            {
+                printf("%02x ", payload[i]);       
+            }
+            printf("\n");
+        }
+        else
+        {
+            printf("No payload\n");
+        }
+    }
+    else if (iph->ip_p == IPPROTO_UDP)
+    {
+        printf("Protocol: UDP\n");
+        struct udphdr *udph = (struct udphdr *)(packet + 14 + iph->ip_hl * 4);        
+        printf("Source Port: %u\n", ntohs(udph->source));
+        printf("Destination Port: %u\n", ntohs(udph->dest));
+        
+        // Calculate and print the payload
+        const u_char *payload = packet + 14 + iph->ip_hl * 4 + sizeof(struct udphdr);
+        int payload_size = ntohs(iph->ip_len) - (iph->ip_hl * 4 + sizeof(struct udphdr));
+        
+        printf("Payload: ");
+        if (payload_size > 0) 
+        {
+            for (int i = 0; i < payload_size; i++) 
+            {
+                printf("%02x ", payload[i]);       
+            }
+            printf("\n");
+        }
+        else
+        {
+            printf("No payload\n");
+        }
+    }
+    else
+    {
+        printf("Protocol: Other\n");
+    }
+}
+
+int main() 
+{
+    pcap_t *handle;
+    char error_buffer[PCAP_ERRBUF_SIZE];
+    char *device = pcap_lookupdev(error_buffer);
+
+    if (device == NULL)
+    {
+        fprintf(stderr, "Error finding device: %s\n", error_buffer);
+        return 1;
+    }
+    
+    printf("Capturing on device: %s\n", device);
+    
+    handle = pcap_open_live(device, BUFSIZ, 1, 1000, error_buffer);
+    if (handle == NULL) 
+    {
+        fprintf(stderr, "Error opening device: %s\n", error_buffer);
+        return 2;
+    }
+    
+    pcap_loop(handle, 0, packet_handler, NULL);
+    pcap_close(handle);
+    return 0;
+}
